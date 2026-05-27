@@ -22,3 +22,27 @@ All plugin files are stored in `plugins/AkitosPlugins/`.
 AkitosCore exposes a clean API for other plugins to hook into:
 
 ```java
+ICoreAPI core = com.akito_sekuna.core.Main.getAPI();
+core.getEconomy().give(player.getUniqueId(), 100);
+core.getPlayerData().get(player.getUniqueId());
+```
+
+Add AkitosCore as a dependency in your `plugin.yml`:
+```yaml
+depend: [AkitosCore]
+```
+
+## Configuration
+`config.yml`:
+```yaml
+language: en
+economy:
+  currency-name: "Pixels"
+  currency-symbol: "px"
+  starting-balance: 100.0
+data:
+  save-interval-seconds: 300
+```
+
+## Part of the Akito's Plugin Network
+- [AkitosDrugs](https://github.com/AkitoSekuna/AkitosDrugs)
