@@ -1,0 +1,15 @@
+# AkitosCore Configuration
+
+# Language to use for all Akito's plugins
+# Available: en, ru
+language: en
+
+# Economy settings
+economy:
+  currency-name: "Pixels"
+  currency-symbol: "px"
+  starting-balance: 100.0
+
+# Player data settings
+data:
+  save-interval-seconds: 300

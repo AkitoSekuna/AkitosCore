@@ -1,0 +1,18 @@
+name: AkitosCore
+version: 1.0.0
+main: com.akito_sekuna.core.Main
+api-version: '1.21'
+author: Akito_Sekuna
+description: The core plugin for the Akito's plugin network. Provides shared economy, player data, and language systems.
+
+commands:
+  akitoscore:
+    description: AkitosCore main command
+    aliases: [ac]
+    usage: /akitoscore [reload|info]
+    permission: akitoscore.admin
+
+permissions:
+  akitoscore.admin:
+    description: Access to all AkitosCore admin commands
+    default: op
