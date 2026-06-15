@@ -12,14 +12,20 @@ public class ConfigManager {
 
     private FileConfiguration config;
     private final File file;
+    private final Main plugin;
 
     public ConfigManager(Main plugin) {
+        this.plugin = plugin;
         file = new File(Main.getPluginFolder(), "config.yml");
         if (!file.exists()) {
-            Main.getPluginFolder().mkdirs();
+            if (!Main.getPluginFolder().mkdirs()) {
+                plugin.getLogger().warning("Plugin folder already exists or could not be created.");
+            }
             try (InputStream in = plugin.getResource("config.yml")) {
                 if (in != null) Files.copy(in, file.toPath());
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to copy default config.yml: " + e.getMessage());
+            }
         }
         config = YamlConfiguration.loadConfiguration(file);
     }

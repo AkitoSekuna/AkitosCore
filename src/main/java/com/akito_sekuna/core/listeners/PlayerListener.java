@@ -8,13 +8,19 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerListener implements Listener {
 
+    private final Main plugin;
+
+    public PlayerListener(Main plugin) {
+        this.plugin = plugin;
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Main.playerDataManager.load(event.getPlayer());
+        plugin.getPlayerDataManager().load(event.getPlayer());
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        Main.playerDataManager.unload(event.getPlayer().getUniqueId());
+        plugin.getPlayerDataManager().unload(event.getPlayer().getUniqueId());
     }
 }

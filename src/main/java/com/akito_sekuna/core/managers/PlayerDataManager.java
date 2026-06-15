@@ -22,7 +22,9 @@ public class PlayerDataManager implements IPlayerDataAPI {
     public PlayerDataManager(Main plugin) {
         this.plugin = plugin;
         this.dataFolder = new File(Main.getPluginFolder(), "playerdata");
-        if (!dataFolder.exists()) dataFolder.mkdirs();
+        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
+            plugin.getLogger().severe("Failed to create playerdata directory: " + dataFolder.getPath());
+        }
     }
 
     public PlayerData load(Player player) {
@@ -32,7 +34,7 @@ public class PlayerDataManager implements IPlayerDataAPI {
         File file = new File(dataFolder, uuid + ".yml");
         if (!file.exists()) {
             PlayerData fresh = PlayerData.createNew(uuid, player.getName(),
-                    Main.configManager.getStartingBalance());
+                    plugin.getConfigManager().getStartingBalance());
             cache.put(uuid, fresh);
             save(fresh);
             return fresh;
@@ -42,7 +44,7 @@ public class PlayerDataManager implements IPlayerDataAPI {
         PlayerData data = new PlayerData(
                 uuid,
                 config.getString("name", player.getName()),
-                config.getDouble("balance", Main.configManager.getStartingBalance()),
+                config.getDouble("balance", plugin.getConfigManager().getStartingBalance()),
                 config.getInt("kills", 0),
                 config.getInt("deaths", 0),
                 config.getInt("mob-kills", 0),
@@ -64,7 +66,11 @@ public class PlayerDataManager implements IPlayerDataAPI {
         config.set("mob-kills", data.mobKills());
         config.set("playtime-seconds", data.playtimeSeconds());
         config.set("quests-completed", data.questsCompleted());
-        try { config.save(file); } catch (IOException e) { e.printStackTrace(); }
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save player data for " + data.uuid() + ": " + e.getMessage());
+        }
         cache.put(data.uuid(), data);
     }
 

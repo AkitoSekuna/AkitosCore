@@ -17,7 +17,7 @@ public class LangManager implements ILangAPI {
 
     public LangManager(Main plugin) {
         this.plugin = plugin;
-        load(Main.configManager.getLanguage());
+        load(plugin.getConfigManager().getLanguage());
     }
 
     public void load(String language) {
@@ -26,25 +26,25 @@ public class LangManager implements ILangAPI {
 
         File file = new File(langFolder, language + ".yml");
 
-        // copy from resources if doesn't exist
         if (!file.exists()) {
             try (InputStream in = plugin.getResource("lang/" + language + ".yml")) {
                 if (in != null) {
                     Files.copy(in, file.toPath());
                 } else {
-                    // fallback to en if language file not found
                     plugin.getLogger().warning("Language file '" + language + ".yml' not found, falling back to en.");
                     try (InputStream en = plugin.getResource("lang/en.yml")) {
                         if (en != null) Files.copy(en, new File(langFolder, "en.yml").toPath());
                     }
                     file = new File(langFolder, "en.yml");
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to load language file '" + language + "': " + e.getMessage());
+            }
         }
 
         lang = YamlConfiguration.loadConfiguration(file);
 
-        // fallback layer — load en.yml as base so missing keys still work
+        // Fallback layer -- load en.yml as base so missing keys still resolve
         File enFile = new File(langFolder, "en.yml");
         if (!enFile.equals(file) && enFile.exists()) {
             FileConfiguration enLang = YamlConfiguration.loadConfiguration(enFile);
@@ -57,7 +57,7 @@ public class LangManager implements ILangAPI {
     }
 
     public void reload() {
-        load(Main.configManager.getLanguage());
+        load(plugin.getConfigManager().getLanguage());
     }
 
     public String get(String key) {
@@ -77,7 +77,6 @@ public class LangManager implements ILangAPI {
         return value;
     }
 
-    // Convenience method for single replacement
     public String get(String key, String placeholder, String value) {
         return get(key, Map.of(placeholder, value));
     }
