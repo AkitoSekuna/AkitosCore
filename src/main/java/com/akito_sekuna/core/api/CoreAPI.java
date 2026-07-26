@@ -1,5 +1,6 @@
 package com.akito_sekuna.core.api;
 
+import com.akito_sekuna.core.managers.BankManager;
 import com.akito_sekuna.core.managers.EconomyManager;
 import com.akito_sekuna.core.managers.LangManager;
 import com.akito_sekuna.core.managers.PlayerDataManager;
@@ -11,13 +12,16 @@ public class CoreAPI implements ICoreAPI {
     private final PlayerDataManager playerDataManager;
     private final LangManager langManager;
     private final ServiceRegistry serviceRegistry;
+    private final BankManager bankManager;
 
     public CoreAPI(EconomyManager economyManager, PlayerDataManager playerDataManager,
-                   LangManager langManager, ServiceRegistry serviceRegistry) {
+                   LangManager langManager, ServiceRegistry serviceRegistry,
+                   BankManager bankManager) {
         this.economyManager = economyManager;
         this.playerDataManager = playerDataManager;
         this.langManager = langManager;
         this.serviceRegistry = serviceRegistry;
+        this.bankManager = bankManager;
     }
 
     @Override
@@ -38,5 +42,10 @@ public class CoreAPI implements ICoreAPI {
     @Override
     public IServiceRegistry getServiceRegistry() {
         return serviceRegistry;
+    }
+
+    @Override
+    public IBankAPI getBank() {
+        return bankManager;
     }
 }

@@ -2,6 +2,7 @@ package com.akito_sekuna.core;
 
 import com.akito_sekuna.core.api.CoreAPI;
 import com.akito_sekuna.core.listeners.PlayerListener;
+import com.akito_sekuna.core.managers.BankManager;
 import com.akito_sekuna.core.managers.ConfigManager;
 import com.akito_sekuna.core.managers.EconomyManager;
 import com.akito_sekuna.core.managers.LangManager;
@@ -28,13 +29,14 @@ public class Main extends JavaPlugin {
     private EconomyManager economyManager;
     private LangManager langManager;
     private ServiceRegistry serviceRegistry;
+    private BankManager bankManager;
 
     public static File getPluginFolder() {
         return new File(instance.getServer().getPluginsFolder(), "AkitosPlugins");
     }
 
     public static void registerAddon(AkitosAddon addon) {
-        registeredAddons.put(addon.getName(), addon);
+        registeredAddons.put(addon.getAddonName(), addon);
     }
 
     public static Map<String, AkitosAddon> getRegisteredAddons() {
@@ -49,8 +51,6 @@ public class Main extends JavaPlugin {
         return instance;
     }
 
-    // --- Instance accessors for internal use ---
-
     public ConfigManager getConfigManager() {
         return configManager;
     }
@@ -63,7 +63,9 @@ public class Main extends JavaPlugin {
         return langManager;
     }
 
-    // --- Lifecycle ---
+    public BankManager getBankManager() {
+        return bankManager;
+    }
 
     @Override
     public void onEnable() {
@@ -74,8 +76,9 @@ public class Main extends JavaPlugin {
         economyManager = new EconomyManager(this);
         langManager = new LangManager(this);
         serviceRegistry = new ServiceRegistry();
+        bankManager = new BankManager(this);
 
-        api = new CoreAPI(economyManager, playerDataManager, langManager, serviceRegistry);
+        api = new CoreAPI(economyManager, playerDataManager, langManager, serviceRegistry, bankManager);
 
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
 

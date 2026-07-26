@@ -22,7 +22,6 @@ public class MainCommand implements CommandExecutor {
             return true;
         }
 
-        // /ac reload
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("akitoscore.admin")) {
                 sender.sendMessage("§cYou don't have permission to do this!");
@@ -35,13 +34,11 @@ public class MainCommand implements CommandExecutor {
             return true;
         }
 
-        // /ac info
         if (args[0].equalsIgnoreCase("info")) {
             sendInfo(sender);
             return true;
         }
 
-        // /ac addons
         if (args[0].equalsIgnoreCase("addons")) {
             Map<String, AkitosAddon> addons = Main.getRegisteredAddons();
             if (addons.isEmpty()) {
@@ -50,7 +47,7 @@ public class MainCommand implements CommandExecutor {
             }
             sender.sendMessage("§8--- §bAkitos Addons §8---");
             addons.forEach((name, addon) ->
-                    sender.sendMessage("§7" + name + " §8- §f" + addon.getVersion()));
+                    sender.sendMessage("§7" + name + " §8- §f" + addon.getAddonVersion()));
             return true;
         }
 

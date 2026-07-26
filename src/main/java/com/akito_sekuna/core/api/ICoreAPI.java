@@ -5,4 +5,5 @@ public interface ICoreAPI {
     IPlayerDataAPI getPlayerData();
     ILangAPI getLang();
     IServiceRegistry getServiceRegistry();
+    IBankAPI getBank();
 }
