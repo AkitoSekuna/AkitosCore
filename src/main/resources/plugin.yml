@@ -1,9 +1,9 @@
 name: AkitosCore
-version: 21.2.1
+version: 21.0.1
 main: com.akito_sekuna.core.Main
 api-version: '1.21'
 author: Akito_Sekuna
-description: The core plugin for the Akitos plugin network. Provides shared economy, bank accounts, player data, and language systems.
+description: The core plugin for the Akito's plugin network. Provides shared economy, player data, and language systems.
 
 commands:
   akitoscore:
