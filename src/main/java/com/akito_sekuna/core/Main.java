@@ -6,6 +6,7 @@ import com.akito_sekuna.core.listeners.PlayerListener;
 import com.akito_sekuna.core.managers.ConfigManager;
 import com.akito_sekuna.core.managers.EconomyManager;
 import com.akito_sekuna.core.managers.LangManager;
+import com.akito_sekuna.core.managers.MetricsManager;
 import com.akito_sekuna.core.managers.PlayerDataManager;
 import com.akito_sekuna.core.managers.SessionTracker;
 import org.bukkit.Bukkit;
@@ -28,6 +29,7 @@ public class Main extends JavaPlugin {
     private static LangManager langManager;
     private static SessionTracker sessionTracker;
     private static ICoreAPI api;
+    private static MetricsManager metricsManager;
 
     private static final Map<String, String> registeredAddons = new HashMap<>();
     private static final List<AkitosAddon> lifecycleAddons = new ArrayList<>();
@@ -70,6 +72,8 @@ public class Main extends JavaPlugin {
         langManager = new LangManager(this);
         sessionTracker = new SessionTracker();
         api = new CoreAPI();
+        metricsManager = new MetricsManager(this);
+        metricsManager.registerLineChart("registered_addons", () -> getRegisteredAddons().size());
 
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
         getCommand("akitoscore").setExecutor(new MainCommand());
@@ -119,5 +123,9 @@ public class Main extends JavaPlugin {
 
     public static SessionTracker getSessionTracker() {
         return sessionTracker;
+    }
+
+    public static MetricsManager getMetricsManager() {
+        return metricsManager;
     }
 }

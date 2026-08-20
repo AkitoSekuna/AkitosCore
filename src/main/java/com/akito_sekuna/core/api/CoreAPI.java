@@ -18,4 +18,9 @@ public class CoreAPI implements ICoreAPI {
     public ILangAPI getLang() {
         return Main.getLangManager();
     }
+
+    @Override
+    public IMetricsAPI getMetrics() {
+        return Main.getMetricsManager();
+    }
 }
