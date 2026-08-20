@@ -1,71 +1,64 @@
 package com.akito_sekuna.core;
 
 import com.akito_sekuna.core.api.CoreAPI;
+import com.akito_sekuna.core.api.ICoreAPI;
 import com.akito_sekuna.core.listeners.PlayerListener;
-import com.akito_sekuna.core.managers.BankManager;
 import com.akito_sekuna.core.managers.ConfigManager;
 import com.akito_sekuna.core.managers.EconomyManager;
 import com.akito_sekuna.core.managers.LangManager;
 import com.akito_sekuna.core.managers.PlayerDataManager;
-import com.akito_sekuna.core.managers.ServiceRegistry;
+import com.akito_sekuna.core.managers.SessionTracker;
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Main extends JavaPlugin {
 
     private static Main instance;
-    private static CoreAPI api;
 
-    private static final Map<String, AkitosAddon> registeredAddons = new LinkedHashMap<>();
+    private static ConfigManager configManager;
+    private static PlayerDataManager playerDataManager;
+    private static EconomyManager economyManager;
+    private static LangManager langManager;
+    private static SessionTracker sessionTracker;
+    private static ICoreAPI api;
 
-    private ConfigManager configManager;
-    private PlayerDataManager playerDataManager;
-    private EconomyManager economyManager;
-    private LangManager langManager;
-    private ServiceRegistry serviceRegistry;
-    private BankManager bankManager;
+    private static final Map<String, String> registeredAddons = new HashMap<>();
+    private static final List<AkitosAddon> lifecycleAddons = new ArrayList<>();
+
+    // --- Plugin folder ---
 
     public static File getPluginFolder() {
         return new File(instance.getServer().getPluginsFolder(), "AkitosPlugins");
     }
 
-    public static void registerAddon(AkitosAddon addon) {
-        registeredAddons.put(addon.getAddonName(), addon);
+    // --- Addon registry ---
+
+    public static void registerAddon(String name, String version) {
+        registeredAddons.put(name, version);
     }
 
-    public static Map<String, AkitosAddon> getRegisteredAddons() {
+    public static void registerAddon(AkitosAddon addon) {
+        registeredAddons.put(addon.getAddonName(), addon.getAddonVersion());
+        lifecycleAddons.add(addon);
+        addon.onCoreReady(api);
+    }
+
+    public static void notifyReload(ReloadReason reason) {
+        lifecycleAddons.forEach(addon -> addon.onCoreReload(api, reason));
+    }
+
+    public static Map<String, String> getRegisteredAddons() {
         return Collections.unmodifiableMap(registeredAddons);
     }
 
-    public static CoreAPI getAPI() {
-        return api;
-    }
-
-    public static Main getInstance() {
-        return instance;
-    }
-
-    public ConfigManager getConfigManager() {
-        return configManager;
-    }
-
-    public PlayerDataManager getPlayerDataManager() {
-        return playerDataManager;
-    }
-
-    public LangManager getLangManager() {
-        return langManager;
-    }
-
-    public BankManager getBankManager() {
-        return bankManager;
-    }
+    // --- Lifecycle ---
 
     @Override
     public void onEnable() {
@@ -75,38 +68,56 @@ public class Main extends JavaPlugin {
         playerDataManager = new PlayerDataManager(this);
         economyManager = new EconomyManager(this);
         langManager = new LangManager(this);
-        serviceRegistry = new ServiceRegistry();
-        bankManager = new BankManager(this);
+        sessionTracker = new SessionTracker();
+        api = new CoreAPI();
 
-        api = new CoreAPI(economyManager, playerDataManager, langManager, serviceRegistry, bankManager);
+        getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+        getCommand("akitoscore").setExecutor(new MainCommand());
+        getCommand("akitoscore").setTabCompleter(new MainTabCompleter());
 
-        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+        int intervalSeconds = configManager.getSaveInterval();
+        long intervalTicks = intervalSeconds * 20L;
+        Bukkit.getScheduler().runTaskTimer(this, () -> playerDataManager.saveAll(), intervalTicks, intervalTicks);
 
-        PluginCommand command = getCommand("akitoscore");
-        if (command != null) {
-            command.setExecutor(new MainCommand(this));
-            command.setTabCompleter(new MainTabCompleter());
-        } else {
-            getLogger().severe("Failed to register 'akitoscore' command -- check plugin.yml!");
-        }
-
-        long saveInterval = configManager.getSaveInterval() * 20L;
-        Bukkit.getScheduler().runTaskTimer(this, () -> playerDataManager.saveAll(), saveInterval, saveInterval);
-
-        registeredAddons.values().forEach(addon -> addon.onCoreReady(api));
-
-        getLogger().info("AkitosCore v" + getPluginMeta().getVersion() + " enabled!");
-    }
-
-    public void notifyAddonsReload(ReloadReason reason) {
-        registeredAddons.values().forEach(addon -> addon.onCoreReload(api, reason));
+        getLogger().info("AkitosCore v" + getDescription().getVersion() + " enabled.");
     }
 
     @Override
     public void onDisable() {
-        registeredAddons.values().forEach(AkitosAddon::onCoreShutdown);
-        serviceRegistry.clear();
+        lifecycleAddons.forEach(AkitosAddon::onCoreShutdown);
         playerDataManager.saveAll();
-        getLogger().info("AkitosCore disabled!");
+        getLogger().info("AkitosCore disabled.");
+    }
+
+    // --- Public API entry point ---
+
+    public static ICoreAPI getAPI() {
+        return api;
+    }
+
+    // --- Internal accessors ---
+
+    public static Main getInstance() {
+        return instance;
+    }
+
+    public static ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public static PlayerDataManager getPlayerDataManager() {
+        return playerDataManager;
+    }
+
+    public static EconomyManager getEconomyManager() {
+        return economyManager;
+    }
+
+    public static LangManager getLangManager() {
+        return langManager;
+    }
+
+    public static SessionTracker getSessionTracker() {
+        return sessionTracker;
     }
 }

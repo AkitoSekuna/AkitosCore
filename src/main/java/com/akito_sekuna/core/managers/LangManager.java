@@ -17,7 +17,7 @@ public class LangManager implements ILangAPI {
 
     public LangManager(Main plugin) {
         this.plugin = plugin;
-        load(plugin.getConfigManager().getLanguage());
+        load(Main.getConfigManager().getLanguage());
     }
 
     public void load(String language) {
@@ -32,19 +32,20 @@ public class LangManager implements ILangAPI {
                     Files.copy(in, file.toPath());
                 } else {
                     plugin.getLogger().warning("Language file '" + language + ".yml' not found, falling back to en.");
+                    File enFile = new File(langFolder, "en.yml");
                     try (InputStream en = plugin.getResource("lang/en.yml")) {
-                        if (en != null) Files.copy(en, new File(langFolder, "en.yml").toPath());
+                        if (en != null && !enFile.exists()) Files.copy(en, enFile.toPath());
                     }
                     file = new File(langFolder, "en.yml");
                 }
             } catch (Exception e) {
-                plugin.getLogger().severe("Failed to load language file '" + language + "': " + e.getMessage());
+                plugin.getLogger().severe("Failed to copy language file '" + language + ".yml': " + e.getMessage());
             }
         }
 
         lang = YamlConfiguration.loadConfiguration(file);
 
-        // Fallback layer -- load en.yml as base so missing keys still resolve
+        // Fallback layer: fill missing keys from en.yml so partial translations still work.
         File enFile = new File(langFolder, "en.yml");
         if (!enFile.equals(file) && enFile.exists()) {
             FileConfiguration enLang = YamlConfiguration.loadConfiguration(enFile);
@@ -57,18 +58,20 @@ public class LangManager implements ILangAPI {
     }
 
     public void reload() {
-        load(plugin.getConfigManager().getLanguage());
+        load(Main.getConfigManager().getLanguage());
     }
 
+    @Override
     public String get(String key) {
         String value = lang.getString(key);
         if (value == null) {
             plugin.getLogger().warning("Missing lang key: " + key);
-            return "§c[missing: " + key + "]";
+            return "&c[missing: " + key + "]";
         }
         return value;
     }
 
+    @Override
     public String get(String key, Map<String, String> replacements) {
         String value = get(key);
         for (Map.Entry<String, String> entry : replacements.entrySet()) {
@@ -77,6 +80,7 @@ public class LangManager implements ILangAPI {
         return value;
     }
 
+    @Override
     public String get(String key, String placeholder, String value) {
         return get(key, Map.of(placeholder, value));
     }

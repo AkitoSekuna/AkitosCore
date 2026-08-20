@@ -1,0 +1,21 @@
+# AkitosCore Language File - English
+
+core:
+  no-permission: "&cYou don't have permission to do this."
+  reload-success: "&aAkitosCore reloaded."
+  player-only: "&cThis command can only be run by a player."
+
+info:
+  header: "&8--- &bAkitosCore &8---"
+  version: "&7Version: &f{version}"
+  author: "&7Author: &fAkito_Sekuna"
+  currency: "&7Currency: &f{currency}"
+  language: "&7Language: &f{language}"
+  addons: "&7Addons: &f{count} registered"
+  help-reload: "&7/ac reload &8- &7Reload config and lang"
+  help-addons: "&7/ac addons &8- &7List registered addons"
+
+addons:
+  header: "&8--- &bAkitos Addons &8---"
+  entry: "&7{name} &8- &fv{version}"
+  none: "&7No addons registered."

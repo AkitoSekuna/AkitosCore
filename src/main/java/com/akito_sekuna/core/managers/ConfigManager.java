@@ -18,9 +18,7 @@ public class ConfigManager {
         this.plugin = plugin;
         file = new File(Main.getPluginFolder(), "config.yml");
         if (!file.exists()) {
-            if (!Main.getPluginFolder().mkdirs()) {
-                plugin.getLogger().warning("Plugin folder already exists or could not be created.");
-            }
+            Main.getPluginFolder().mkdirs();
             try (InputStream in = plugin.getResource("config.yml")) {
                 if (in != null) Files.copy(in, file.toPath());
             } catch (Exception e) {
@@ -57,6 +55,15 @@ public class ConfigManager {
     // --- Data ---
 
     public int getSaveInterval() {
-        return config.getInt("data.save-interval-seconds", 300);
+        int value = config.getInt("data.save-interval-seconds", 300);
+        if (value < 30) {
+            plugin.getLogger().warning("save-interval-seconds is below minimum (30). Clamping to 30.");
+            return 30;
+        }
+        if (value > 3600) {
+            plugin.getLogger().warning("save-interval-seconds is above maximum (3600). Clamping to 3600.");
+            return 3600;
+        }
+        return value;
     }
 }

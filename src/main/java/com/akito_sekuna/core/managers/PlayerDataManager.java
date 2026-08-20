@@ -9,42 +9,41 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerDataManager implements IPlayerDataAPI {
 
     private final Main plugin;
     private final File dataFolder;
-    private final Map<UUID, PlayerData> cache = new HashMap<>();
+    private final ConcurrentHashMap<UUID, PlayerData> cache = new ConcurrentHashMap<>();
 
     public PlayerDataManager(Main plugin) {
         this.plugin = plugin;
         this.dataFolder = new File(Main.getPluginFolder(), "playerdata");
-        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
-            plugin.getLogger().severe("Failed to create playerdata directory: " + dataFolder.getPath());
-        }
+        if (!dataFolder.exists()) dataFolder.mkdirs();
     }
 
-    public PlayerData load(Player player) {
+    // --- Internal lifecycle methods (not on public API) ---
+
+    public void load(Player player) {
         UUID uuid = player.getUniqueId();
-        if (cache.containsKey(uuid)) return cache.get(uuid);
+        if (cache.containsKey(uuid)) return;
 
         File file = new File(dataFolder, uuid + ".yml");
         if (!file.exists()) {
             PlayerData fresh = PlayerData.createNew(uuid, player.getName(),
-                    plugin.getConfigManager().getStartingBalance());
+                    Main.getConfigManager().getStartingBalance());
             cache.put(uuid, fresh);
             save(fresh);
-            return fresh;
+            return;
         }
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         PlayerData data = new PlayerData(
                 uuid,
                 config.getString("name", player.getName()),
-                config.getDouble("balance", plugin.getConfigManager().getStartingBalance()),
+                config.getDouble("balance", Main.getConfigManager().getStartingBalance()),
                 config.getInt("kills", 0),
                 config.getInt("deaths", 0),
                 config.getInt("mob-kills", 0),
@@ -52,7 +51,6 @@ public class PlayerDataManager implements IPlayerDataAPI {
                 config.getInt("quests-completed", 0)
         );
         cache.put(uuid, data);
-        return data;
     }
 
     public void save(PlayerData data) {
@@ -74,12 +72,9 @@ public class PlayerDataManager implements IPlayerDataAPI {
         cache.put(data.uuid(), data);
     }
 
-    public void update(PlayerData data) {
+    // Internal full-replace update used by EconomyManager.
+    public void updateData(PlayerData data) {
         cache.put(data.uuid(), data);
-    }
-
-    public PlayerData get(UUID uuid) {
-        return cache.get(uuid);
     }
 
     public void unload(UUID uuid) {
@@ -89,5 +84,47 @@ public class PlayerDataManager implements IPlayerDataAPI {
 
     public void saveAll() {
         cache.values().forEach(this::save);
+    }
+
+    // --- IPlayerDataAPI (public API) ---
+
+    @Override
+    public PlayerData get(UUID uuid) {
+        return cache.get(uuid);
+    }
+
+    @Override
+    public void addKills(UUID uuid, int amount) {
+        PlayerData data = cache.get(uuid);
+        if (data == null) return;
+        cache.put(uuid, data.withKills(data.kills() + amount));
+    }
+
+    @Override
+    public void addDeaths(UUID uuid, int amount) {
+        PlayerData data = cache.get(uuid);
+        if (data == null) return;
+        cache.put(uuid, data.withDeaths(data.deaths() + amount));
+    }
+
+    @Override
+    public void addMobKills(UUID uuid, int amount) {
+        PlayerData data = cache.get(uuid);
+        if (data == null) return;
+        cache.put(uuid, data.withMobKills(data.mobKills() + amount));
+    }
+
+    @Override
+    public void addPlaytime(UUID uuid, long seconds) {
+        PlayerData data = cache.get(uuid);
+        if (data == null) return;
+        cache.put(uuid, data.withPlaytime(data.playtimeSeconds() + seconds));
+    }
+
+    @Override
+    public void addQuestsCompleted(UUID uuid, int amount) {
+        PlayerData data = cache.get(uuid);
+        if (data == null) return;
+        cache.put(uuid, data.withQuestsCompleted(data.questsCompleted() + amount));
     }
 }

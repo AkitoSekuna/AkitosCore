@@ -12,4 +12,6 @@ economy:
 
 # Player data settings
 data:
+  # How often player data is saved to disk, in seconds.
+  # Minimum: 30. Maximum: 3600.
   save-interval-seconds: 300

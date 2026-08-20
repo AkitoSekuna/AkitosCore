@@ -1,0 +1,21 @@
+# AkitosCore Language File - Russian
+
+core:
+  no-permission: "&cУ вас нет прав для выполнения этой команды."
+  reload-success: "&aAkitosCore перезагружен."
+  player-only: "&cЭта команда доступна только игрокам."
+
+info:
+  header: "&8--- &bAkitosCore &8---"
+  version: "&7Версия: &f{version}"
+  author: "&7Автор: &fAkito_Sekuna"
+  currency: "&7Валюта: &f{currency}"
+  language: "&7Язык: &f{language}"
+  addons: "&7Аддоны: &f{count} зарегистрировано"
+  help-reload: "&7/ac reload &8- &7Перезагрузить конфиг и язык"
+  help-addons: "&7/ac addons &8- &7Список зарегистрированных аддонов"
+
+addons:
+  header: "&8--- &bАддоны Akitos &8---"
+  entry: "&7{name} &8- &fv{version}"
+  none: "&7Нет зарегистрированных аддонов."

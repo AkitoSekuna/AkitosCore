@@ -6,7 +6,7 @@
 
     <groupId>com.akito_sekuna</groupId>
     <artifactId>AkitosCore</artifactId>
-    <version>21.0.1</version>
+    <version>21.2.2</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

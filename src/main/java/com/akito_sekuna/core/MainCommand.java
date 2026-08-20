@@ -3,20 +3,13 @@ package com.akito_sekuna.core;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
 public class MainCommand implements CommandExecutor {
 
-    private final Main plugin;
-
-    public MainCommand(Main plugin) {
-        this.plugin = plugin;
-    }
-
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             sendInfo(sender);
             return true;
@@ -24,13 +17,13 @@ public class MainCommand implements CommandExecutor {
 
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("akitoscore.admin")) {
-                sender.sendMessage("§cYou don't have permission to do this!");
+                sender.sendMessage(colorize(Main.getLangManager().get("core.no-permission")));
                 return true;
             }
-            plugin.getConfigManager().reload();
-            plugin.getLangManager().reload();
-            plugin.notifyAddonsReload(ReloadReason.ADMIN_COMMAND);
-            sender.sendMessage("§aAkitosCore reloaded!");
+            Main.getConfigManager().reload();
+            Main.getLangManager().reload();
+            Main.notifyReload(ReloadReason.ADMIN_COMMAND);
+            sender.sendMessage(colorize(Main.getLangManager().get("core.reload-success")));
             return true;
         }
 
@@ -40,14 +33,15 @@ public class MainCommand implements CommandExecutor {
         }
 
         if (args[0].equalsIgnoreCase("addons")) {
-            Map<String, AkitosAddon> addons = Main.getRegisteredAddons();
+            Map<String, String> addons = Main.getRegisteredAddons();
             if (addons.isEmpty()) {
-                sender.sendMessage("§7No addons registered.");
+                sender.sendMessage(colorize(Main.getLangManager().get("addons.none")));
                 return true;
             }
-            sender.sendMessage("§8--- §bAkitos Addons §8---");
-            addons.forEach((name, addon) ->
-                    sender.sendMessage("§7" + name + " §8- §f" + addon.getAddonVersion()));
+            sender.sendMessage(colorize(Main.getLangManager().get("addons.header")));
+            addons.forEach((name, version) ->
+                    sender.sendMessage(colorize(Main.getLangManager().get("addons.entry",
+                            Map.of("name", name, "version", version)))));
             return true;
         }
 
@@ -56,13 +50,21 @@ public class MainCommand implements CommandExecutor {
     }
 
     private void sendInfo(CommandSender sender) {
-        sender.sendMessage("§8--- §bAkitosCore §8---");
-        sender.sendMessage("§7Version: §f" + plugin.getPluginMeta().getVersion());
-        sender.sendMessage("§7Author: §fAkito_Sekuna");
-        sender.sendMessage("§7Currency: §f" + plugin.getConfigManager().getCurrencyName());
-        sender.sendMessage("§7Language: §f" + plugin.getConfigManager().getLanguage());
-        sender.sendMessage("§7Addons: §f" + Main.getRegisteredAddons().size() + " registered");
-        sender.sendMessage("§7/ac reload §8- §7Reload config and lang");
-        sender.sendMessage("§7/ac addons §8- §7List registered addons");
+        String version = Main.getInstance().getDescription().getVersion();
+        sender.sendMessage(colorize(Main.getLangManager().get("info.header")));
+        sender.sendMessage(colorize(Main.getLangManager().get("info.version", "version", version)));
+        sender.sendMessage(colorize(Main.getLangManager().get("info.author")));
+        sender.sendMessage(colorize(Main.getLangManager().get("info.currency",
+                "currency", Main.getConfigManager().getCurrencyName())));
+        sender.sendMessage(colorize(Main.getLangManager().get("info.language",
+                "language", Main.getConfigManager().getLanguage())));
+        sender.sendMessage(colorize(Main.getLangManager().get("info.addons",
+                "count", String.valueOf(Main.getRegisteredAddons().size()))));
+        sender.sendMessage(colorize(Main.getLangManager().get("info.help-reload")));
+        sender.sendMessage(colorize(Main.getLangManager().get("info.help-addons")));
+    }
+
+    private String colorize(String input) {
+        return input.replace("&", "\u00a7");
     }
 }
