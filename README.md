@@ -1,74 +1,92 @@
-# AkitosLobby
+﻿# AkitosCore
 
-Lobby teleportation and interactive treasure head addon for the Akitos plugin network. Provides seamless `/lobby` teleportation commands and clickable treasure head rewards with dynamic payouts, long-term cooldowns, and Headsmith skin integration.
+Core plugin for the Akitos plugin network. Provides the shared economy, banking, player data, language, and metrics systems every other Akitos plugin builds on. Every other plugin in the network hard-depends on this one; it has no dependencies of its own within the network.
 
 ## Requirements
 
-* Paper 1.21.1+
+* Paper 1.21.11+
 * Java 21+
-* AkitosCore v21.2.0+
-* Headsmith (soft dependency; required only for custom mini-block head skins)
 
 ## Installation
 
-1. Install AkitosCore first.
-2. (Optional) Install Headsmith if you want custom mini-block textures for treasure heads.
-3. Drop `AkitosLobby-21.2.1.jar` into your `plugins/` folder.
-4. Restart the server. Default configuration files are generated on first run.
-
-[NOTE: AkitosLobby strictly requires AkitosCore. On startup, it verifies that both plugins share the same Major and Minor version numbers (21.2.X). If a version mismatch is detected, AkitosLobby will automatically disable itself to prevent errors.]
+1. Drop `AkitosCore-21.2.5.jar` into your `plugins/` folder.
+2. Restart the server. Default configuration and language files are generated on first run.
+3. Install any Akitos addon plugin (AkitosGambling, AkitosVault, AkitosDrugs, AkitosLobby) alongside it. Addons will refuse to enable if their own major/minor version (the `X.Y` in `vX.Y.Z`) doesn't match AkitosCore's.
 
 ## Commands
 
 | Command | Description | Permission |
 | --- | --- | --- |
-| `/lobby` | Teleport to the main lobby spawn location | `akitoslobby.use` |
-| `/treasurehead [rarity]` | Place a clickable treasure head at your feet | `akitoslobby.admin` |
+| `/akitoscore` | Show plugin info (version, currency, language, addon count) | none |
+| `/akitoscore reload` | Reload `config.yml` and the active language file, notify all registered addons | `akitoscore.admin` |
+| `/akitoscore addons` | List every addon currently registered with Core | none |
 
-Aliases: `/hub` (for `/lobby`)
+Alias: `/ac`
 
 ## Permissions
 
 | Permission | Description | Default |
 | --- | --- | --- |
-| `akitoslobby.use` | Access to `/lobby` and `/hub` commands | true |
-| `akitoslobby.admin` | Access to place treasure heads via `/treasurehead` | op |
+| `akitoscore.admin` | Access to `/akitoscore reload` | op |
 
 ## Configuration
 
-`AkitosPlugins/AkitosLobby/config.yml`:
+`AkitosPlugins/AkitosCore/config.yml`:
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `lobby-world` | string | `world` | Target world where players are teleported upon executing `/lobby` |
-| `treasure-head.cooldown-days` | integer | `30` | Per-player cooldown duration (in days) between claims |
-| `treasure-head.rarities.normal.min-reward` | integer | `100` | Minimum coin payout for normal treasure heads |
-| `treasure-head.rarities.normal.max-reward` | integer | `500` | Maximum coin payout for normal treasure heads |
-| `treasure-head.rarities.normal.headsmith-name` | string | `mini copper block` | Headsmith item identifier used when placing normal heads |
-| `treasure-head.rarities.big.min-reward` | integer | `500` | Minimum coin payout for big treasure heads |
-| `treasure-head.rarities.big.max-reward` | integer | `2500` | Maximum coin payout for big treasure heads |
-| `treasure-head.rarities.big.headsmith-name` | string | `mini gold block` | Headsmith item identifier used when placing big heads |
-| `treasure-head.rarities.mega.min-reward` | integer | `2500` | Minimum coin payout for mega treasure heads |
-| `treasure-head.rarities.mega.max-reward` | integer | `10000` | Maximum coin payout for mega treasure heads |
-| `treasure-head.rarities.mega.headsmith-name` | string | `mini emerald block` | Headsmith item identifier used when placing mega heads |
+| `language` | string | `en` | Active language file. Available: `en`, `ru`. |
+| `economy.currency-name` | string | `Pixels` | Display name for the shared currency. |
+| `economy.currency-symbol` | string | `px` | Short symbol appended to formatted amounts. |
+| `economy.starting-balance` | double | `100.0` | Balance given to a player on their first join. |
+| `data.save-interval-seconds` | integer | `300` | How often player data is written to disk, in seconds. Minimum `30`, maximum `3600`. |
+| `metrics.enabled` | boolean | `true` | Whether anonymous usage statistics are sent via bStats. Addons report through Core rather than talking to bStats directly, so this one toggle covers the whole network. |
 
-## Storage
+Language files live at `AkitosPlugins/AkitosCore/lang/en.yml` and `lang/ru.yml`. As of `21.2.5` this file is shared across the whole network: alongside Core's own `core`, `info`, and `addons` sections, it holds a labeled, currently-empty block reserved for each addon (`gambling`, `drugs`, `lobby`), so that translating the entire network's player-facing text is a matter of editing one pair of files rather than hunting through every plugin's jar. Addon-specific content in those blocks is planned but not yet populated.
 
-Data is stored persistently in block and player NBT data via Paper's Persistent Data Container (PDC). No external database or additional files are required.
+## For addon developers
 
-| Container | Key | Type | Contents |
-| --- | --- | --- | --- |
-| Block PDC (TileEntity) | `treasure_head` | byte | Identifies player head blocks as active treasure heads |
-| Block PDC (TileEntity) | `treasure_rarity` | string | Stores the head rarity tier (`normal`, `big`, or `mega`) |
-| Player PDC | `treasure_cooldown` | long | Timestamp (ms) of the player's last claimed treasure head |
+Get the shared API from anywhere after `AkitosCore` has enabled:
+
+```java
+ICoreAPI api = com.akito_sekuna.core.Main.getAPI();
+```
+
+`ICoreAPI` exposes:
+
+| Method | Returns | Purpose |
+| --- | --- | --- |
+| `getEconomy()` | `IEconomyAPI` | Player balances: `getBalance`, `setBalance`, `give`, `take`, `has`, `format`. |
+| `getBank()` | `IBankAPI` | Named, account-based banking separate from player balances: `create`, `delete`, `deposit`, `withdraw`, `set`, `getBalance`, `exists`, `format`. |
+| `getPlayerData()` | `IPlayerDataAPI` | Read a player's stat record via `get(uuid)`, and targeted mutators (`addKills`, `addDeaths`, `addMobKills`, `addPlaytime`, `addQuestsCompleted`) rather than a full overwrite, so concurrent writers can't clobber each other. |
+| `getLang()` | `ILangAPI` | `get(key)` / `get(key, placeholder, value)` / `get(key, replacements)`, returning the raw `&`-coded string from the active language file. Consumers wrap the result in `LegacyComponentSerializer.legacyAmpersand().deserialize(...)` before sending it, Core does not return a `Component` directly. |
+| `getMetrics()` | `IMetricsAPI` | Register bStats charts (`registerLineChart`, `registerPieChart`, `registerBarChart`) without talking to the bStats library directly; respects the `metrics.enabled` toggle automatically. |
+
+For lifecycle notifications (config reloads, shutdown), implement `AkitosAddon`:
+
+```java
+public interface AkitosAddon {
+    String getAddonName();
+    String getAddonVersion();
+    void onCoreReady(ICoreAPI api);
+    void onCoreReload(ICoreAPI newApi, ReloadReason reason);
+    void onCoreShutdown();
+}
+```
+
+Register it in your own `onEnable()`, after Core has already enabled (declare `akitoscore` as a hard `depend` in your `plugin.yml`):
+
+```java
+Main.registerAddon(this); // where `this` implements AkitosAddon
+```
+
+`onCoreReady` fires synchronously the moment you call `registerAddon`, so it is safe to start using the API immediately afterward in the same method. If you only need to appear in `/akitoscore addons` without any lifecycle callbacks, `Main.registerAddon(String name, String version)` is also available.
 
 ## Part of the Akitos Plugin Network
 
-AkitosLobby is an official addon designed for the Akitos plugin ecosystem. All plugins share the same network version (`Y` in `vX.Y.Z`) and must be kept in sync.
+AkitosCore is the mandatory hard dependency for every plugin in the network. All plugins share the same network version (`Y` in `vX.Y.Z`) and must be kept in sync.
 
-## Checkout my other plugins
-
-* [AkitosCore](https://github.com/AkitoSekuna/AkitosCore)
-* [AkitosDrugs](https://github.com/AkitoSekuna/AkitosDrugs)
 * [AkitosGambling](https://github.com/AkitoSekuna/AkitosGambling)
 * [AkitosVault](https://github.com/AkitoSekuna/AkitosVault)
+* [AkitosDrugs](https://github.com/AkitoSekuna/AkitosDrugs)
+* [AkitosLobby](https://github.com/AkitoSekuna/AkitosLobby)
