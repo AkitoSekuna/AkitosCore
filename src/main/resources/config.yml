@@ -15,3 +15,8 @@ data:
   # How often player data is saved to disk, in seconds.
   # Minimum: 30. Maximum: 3600.
   save-interval-seconds: 300
+
+# Anonymous usage metrics via bStats (https://bstats.org)
+# Addons report data through AkitosCore rather than talking to bStats directly.
+metrics:
+  enabled: true

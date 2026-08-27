@@ -24,6 +24,23 @@ public class PlayerDataManager implements IPlayerDataAPI {
         if (!dataFolder.exists()) dataFolder.mkdirs();
     }
 
+    // Read-only disk load, does NOT touch the online cache.
+    private PlayerData loadFromDisk(UUID uuid) {
+        File file = new File(dataFolder, uuid + ".yml");
+        if (!file.exists()) return null; // genuinely never joined -- correct to return null here
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        return new PlayerData(
+                uuid,
+                config.getString("name", "Unknown"),
+                config.getDouble("balance", 0),
+                config.getInt("kills", 0),
+                config.getInt("deaths", 0),
+                config.getInt("mob-kills", 0),
+                config.getLong("playtime-seconds", 0L),
+                config.getInt("quests-completed", 0)
+        );
+    }
+
     // --- Internal lifecycle methods (not on public API) ---
 
     public void load(Player player) {
@@ -53,7 +70,7 @@ public class PlayerDataManager implements IPlayerDataAPI {
         cache.put(uuid, data);
     }
 
-    public void save(PlayerData data) {
+    private void saveToDiskOnly(PlayerData data) {
         File file = new File(dataFolder, data.uuid() + ".yml");
         FileConfiguration config = new YamlConfiguration();
         config.set("uuid", data.uuid().toString());
@@ -69,12 +86,29 @@ public class PlayerDataManager implements IPlayerDataAPI {
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to save player data for " + data.uuid() + ": " + e.getMessage());
         }
+    }
+
+    public void save(PlayerData data) {
+        saveToDiskOnly(data);
         cache.put(data.uuid(), data);
     }
 
     // Internal full-replace update used by EconomyManager.
     public void updateData(PlayerData data) {
         cache.put(data.uuid(), data);
+    }
+
+    // If the player is online, behaves exactly like updateData() (cache only,
+    // the periodic saveAll() timer flushes it later). If offline, writes straight to
+    // disk and deliberately does NOT add them to the online cache -- keeps this from
+    // becoming an unbounded memory leak if something like /baltop scans every player
+    // who's ever joined.
+    public void updateOffline(PlayerData data) {
+        if (cache.containsKey(data.uuid())) {
+            cache.put(data.uuid(), data);
+            return;
+        }
+        saveToDiskOnly(data);
     }
 
     public void unload(UUID uuid) {
@@ -90,7 +124,9 @@ public class PlayerDataManager implements IPlayerDataAPI {
 
     @Override
     public PlayerData get(UUID uuid) {
-        return cache.get(uuid);
+        PlayerData cached = cache.get(uuid);
+        if (cached != null) return cached;
+        return loadFromDisk(uuid);
     }
 
     @Override

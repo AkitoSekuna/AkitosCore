@@ -3,7 +3,9 @@ package com.akito_sekuna.core;
 import com.akito_sekuna.core.api.CoreAPI;
 import com.akito_sekuna.core.api.ICoreAPI;
 import com.akito_sekuna.core.listeners.PlayerListener;
+import com.akito_sekuna.core.managers.BankManager;
 import com.akito_sekuna.core.managers.ConfigManager;
+import com.akito_sekuna.core.managers.CommandIssueTracker;
 import com.akito_sekuna.core.managers.EconomyManager;
 import com.akito_sekuna.core.managers.LangManager;
 import com.akito_sekuna.core.managers.MetricsManager;
@@ -26,10 +28,12 @@ public class Main extends JavaPlugin {
     private static ConfigManager configManager;
     private static PlayerDataManager playerDataManager;
     private static EconomyManager economyManager;
+    private static BankManager bankManager;
     private static LangManager langManager;
     private static SessionTracker sessionTracker;
     private static ICoreAPI api;
     private static MetricsManager metricsManager;
+    private static final CommandIssueTracker commandIssueTracker = new CommandIssueTracker();
 
     private static final Map<String, String> registeredAddons = new HashMap<>();
     private static final List<AkitosAddon> lifecycleAddons = new ArrayList<>();
@@ -69,11 +73,20 @@ public class Main extends JavaPlugin {
         configManager = new ConfigManager(this);
         playerDataManager = new PlayerDataManager(this);
         economyManager = new EconomyManager(this);
+        bankManager = new BankManager(this);
         langManager = new LangManager(this);
         sessionTracker = new SessionTracker();
         api = new CoreAPI();
-        metricsManager = new MetricsManager(this);
+        metricsManager = new MetricsManager(this, configManager.isMetricsEnabled());
         metricsManager.registerLineChart("registered_addons", () -> getRegisteredAddons().size());
+        metricsManager.registerPieChart("currency_name", () -> configManager.getCurrencyName());
+        metricsManager.registerPieChart("language", () -> configManager.getLanguage());
+        metricsManager.registerBarChart("save_interval_seconds", () -> {
+            Map<String, Integer> map = new HashMap<>();
+            map.put(String.valueOf(configManager.getSaveInterval()), 1);
+            return map;
+        });
+        metricsManager.registerBarChart("command_issues", commandIssueTracker::getAndReset);
 
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
         getCommand("akitoscore").setExecutor(new MainCommand());
@@ -83,7 +96,7 @@ public class Main extends JavaPlugin {
         long intervalTicks = intervalSeconds * 20L;
         Bukkit.getScheduler().runTaskTimer(this, () -> playerDataManager.saveAll(), intervalTicks, intervalTicks);
 
-        getLogger().info("AkitosCore v" + getDescription().getVersion() + " enabled.");
+        getLogger().info("AkitosCore v" + getPluginMeta().getVersion() + " enabled.");
     }
 
     @Override
@@ -117,6 +130,10 @@ public class Main extends JavaPlugin {
         return economyManager;
     }
 
+    public static BankManager getBankManager() {
+        return bankManager;
+    }
+
     public static LangManager getLangManager() {
         return langManager;
     }
@@ -127,5 +144,9 @@ public class Main extends JavaPlugin {
 
     public static MetricsManager getMetricsManager() {
         return metricsManager;
+    }
+
+    public static CommandIssueTracker getCommandIssueTracker() {
+        return commandIssueTracker;
     }
 }

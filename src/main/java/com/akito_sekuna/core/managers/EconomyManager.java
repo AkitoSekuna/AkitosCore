@@ -23,9 +23,10 @@ public class EconomyManager implements IEconomyAPI {
 
     @Override
     public void setBalance(UUID uuid, double amount) {
-        PlayerData data = Main.getPlayerDataManager().get(uuid);
-        if (data == null) return;
-        Main.getPlayerDataManager().updateData(data.withBalance(Math.max(0, amount)));
+        PlayerData data = Main.getPlayerDataManager().get(uuid); // now checks disk too
+        if (data == null) return; // still correctly a no-op -- this player has never joined at all
+        double whole = Math.round(Math.max(0, amount));
+        Main.getPlayerDataManager().updateOffline(data.withBalance(whole));
     }
 
     @Override
@@ -48,6 +49,6 @@ public class EconomyManager implements IEconomyAPI {
 
     @Override
     public String format(double amount) {
-        return String.format("%.1f %s", amount, Main.getConfigManager().getCurrencySymbol());
+        return String.format("%.0f %s", amount, Main.getConfigManager().getCurrencySymbol());
     }
 }

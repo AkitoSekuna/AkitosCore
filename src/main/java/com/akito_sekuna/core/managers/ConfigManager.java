@@ -66,4 +66,10 @@ public class ConfigManager {
         }
         return value;
     }
+
+    // --- Metrics ---
+
+    public boolean isMetricsEnabled() {
+        return config.getBoolean("metrics.enabled", true);
+    }
 }

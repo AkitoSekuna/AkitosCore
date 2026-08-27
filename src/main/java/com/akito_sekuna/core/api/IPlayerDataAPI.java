@@ -6,8 +6,8 @@ import java.util.UUID;
 
 public interface IPlayerDataAPI {
 
-    // Read the current cached data for a player.
-    // Returns null if the player is not online.
+    // Read the current cached data for a player, falling back to disk if they're offline.
+    // Returns null only if this player has genuinely never joined the server.
     PlayerData get(UUID uuid);
 
     // Targeted mutators -- use these instead of a full update() to avoid overwriting

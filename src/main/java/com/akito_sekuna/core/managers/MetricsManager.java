@@ -21,22 +21,28 @@ public class MetricsManager implements IMetricsAPI {
 
     private final Metrics metrics;
 
-    public MetricsManager(JavaPlugin plugin) {
-        this.metrics = new Metrics(plugin, PLUGIN_ID);
+    public MetricsManager(JavaPlugin plugin, boolean enabled) {
+        this.metrics = enabled ? new Metrics(plugin, PLUGIN_ID) : null;
     }
 
     @Override
     public void registerPieChart(String chartId, Callable<String> valueSupplier) {
-        metrics.addCustomChart(new SimplePie(chartId, valueSupplier));
+        if (metrics != null) {
+            metrics.addCustomChart(new SimplePie(chartId, valueSupplier));
+        }
     }
 
     @Override
     public void registerBarChart(String chartId, Callable<Map<String, Integer>> valuesSupplier) {
-        metrics.addCustomChart(new SimpleBarChart(chartId, valuesSupplier));
+        if (metrics != null) {
+            metrics.addCustomChart(new SimpleBarChart(chartId, valuesSupplier));
+        }
     }
 
     @Override
     public void registerLineChart(String chartId, Callable<Integer> valueSupplier) {
-        metrics.addCustomChart(new SingleLineChart(chartId, valueSupplier));
+        if (metrics != null) {
+            metrics.addCustomChart(new SingleLineChart(chartId, valueSupplier));
+        }
     }
 }

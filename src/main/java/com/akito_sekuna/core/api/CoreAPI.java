@@ -10,6 +10,11 @@ public class CoreAPI implements ICoreAPI {
     }
 
     @Override
+    public IBankAPI getBank() {
+        return Main.getBankManager();
+    }
+
+    @Override
     public IPlayerDataAPI getPlayerData() {
         return Main.getPlayerDataManager();
     }

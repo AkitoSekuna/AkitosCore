@@ -1,5 +1,15 @@
-# AkitosCore Language File - English
+# =============================================================
+# Akitos Plugin Network - Shared Language File (English)
+# =============================================================
+# This file holds translated strings for the whole network, not
+# just AkitosCore. Each plugin gets its own labeled block below,
+# with its own top-level YAML key to avoid collisions with other
+# plugins' keys. Add new plugin blocks the same way.
+# =============================================================
 
+# -------------------------------------------------------------
+# AkitosCore
+# -------------------------------------------------------------
 core:
   no-permission: "&cYou don't have permission to do this."
   reload-success: "&aAkitosCore reloaded."
@@ -19,3 +29,30 @@ addons:
   header: "&8--- &bAkitos Addons &8---"
   entry: "&7{name} &8- &fv{version}"
   none: "&7No addons registered."
+
+# -------------------------------------------------------------
+# AkitosGambling
+# -------------------------------------------------------------
+# Not yet populated. Existing Gambling messages still live as
+# hardcoded Adventure Components in AkitosGambling's own source,
+# see FUTURE.md's lang.yml expansion item for the planned
+# follow-on migration.
+gambling: {}
+
+# -------------------------------------------------------------
+# AkitosDrugs
+# -------------------------------------------------------------
+# Not yet populated. Existing Drugs messages still live as
+# hardcoded Adventure Components in AkitosDrugs' own source,
+# see FUTURE.md's lang.yml expansion item for the planned
+# follow-on migration.
+drugs: {}
+
+# -------------------------------------------------------------
+# AkitosLobby
+# -------------------------------------------------------------
+# Not yet populated. Existing Lobby messages still live as
+# hardcoded Adventure Components in AkitosLobby's own source,
+# see FUTURE.md's lang.yml expansion item for the planned
+# follow-on migration.
+lobby: {}

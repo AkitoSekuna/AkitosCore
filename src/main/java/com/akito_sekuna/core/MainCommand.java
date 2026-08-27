@@ -1,5 +1,6 @@
 package com.akito_sekuna.core;
 
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,13 +18,14 @@ public class MainCommand implements CommandExecutor {
 
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("akitoscore.admin")) {
-                sender.sendMessage(colorize(Main.getLangManager().get("core.no-permission")));
+                Main.getCommandIssueTracker().record("no-permission");
+                sendLang(sender, "core.no-permission");
                 return true;
             }
             Main.getConfigManager().reload();
             Main.getLangManager().reload();
             Main.notifyReload(ReloadReason.ADMIN_COMMAND);
-            sender.sendMessage(colorize(Main.getLangManager().get("core.reload-success")));
+            sendLang(sender, "core.reload-success");
             return true;
         }
 
@@ -35,36 +37,45 @@ public class MainCommand implements CommandExecutor {
         if (args[0].equalsIgnoreCase("addons")) {
             Map<String, String> addons = Main.getRegisteredAddons();
             if (addons.isEmpty()) {
-                sender.sendMessage(colorize(Main.getLangManager().get("addons.none")));
+                sendLang(sender, "addons.none");
                 return true;
             }
-            sender.sendMessage(colorize(Main.getLangManager().get("addons.header")));
+            sendLang(sender, "addons.header");
             addons.forEach((name, version) ->
-                    sender.sendMessage(colorize(Main.getLangManager().get("addons.entry",
-                            Map.of("name", name, "version", version)))));
+                    sendLang(sender, "addons.entry", Map.of("name", name, "version", version)));
             return true;
         }
 
+        Main.getCommandIssueTracker().record("unknown-subcommand");
         sendInfo(sender);
         return true;
     }
 
     private void sendInfo(CommandSender sender) {
-        String version = Main.getInstance().getDescription().getVersion();
-        sender.sendMessage(colorize(Main.getLangManager().get("info.header")));
-        sender.sendMessage(colorize(Main.getLangManager().get("info.version", "version", version)));
-        sender.sendMessage(colorize(Main.getLangManager().get("info.author")));
-        sender.sendMessage(colorize(Main.getLangManager().get("info.currency",
-                "currency", Main.getConfigManager().getCurrencyName())));
-        sender.sendMessage(colorize(Main.getLangManager().get("info.language",
-                "language", Main.getConfigManager().getLanguage())));
-        sender.sendMessage(colorize(Main.getLangManager().get("info.addons",
-                "count", String.valueOf(Main.getRegisteredAddons().size()))));
-        sender.sendMessage(colorize(Main.getLangManager().get("info.help-reload")));
-        sender.sendMessage(colorize(Main.getLangManager().get("info.help-addons")));
+        String version = Main.getInstance().getPluginMeta().getVersion();
+        sendLang(sender, "info.header");
+        sendLang(sender, "info.version", "version", version);
+        sendLang(sender, "info.author");
+        sendLang(sender, "info.currency", "currency", Main.getConfigManager().getCurrencyName());
+        sendLang(sender, "info.language", "language", Main.getConfigManager().getLanguage());
+        sendLang(sender, "info.addons", "count", String.valueOf(Main.getRegisteredAddons().size()));
+        sendLang(sender, "info.help-reload");
+        sendLang(sender, "info.help-addons");
     }
 
-    private String colorize(String input) {
-        return input.replace("&", "\u00a7");
+    // --- Lang lookup + Adventure conversion ---
+    // ILangAPI/LangManager keep returning raw '&'-coded legacy strings unchanged;
+    // this is the single point where that raw text gets turned into a real Component.
+
+    private void sendLang(CommandSender sender, String key) {
+        sender.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(Main.getLangManager().get(key)));
+    }
+
+    private void sendLang(CommandSender sender, String key, String placeholder, String value) {
+        sender.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(Main.getLangManager().get(key, placeholder, value)));
+    }
+
+    private void sendLang(CommandSender sender, String key, Map<String, String> replacements) {
+        sender.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(Main.getLangManager().get(key, replacements)));
     }
 }
