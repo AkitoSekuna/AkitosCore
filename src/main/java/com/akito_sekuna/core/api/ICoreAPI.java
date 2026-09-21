@@ -6,4 +6,5 @@ public interface ICoreAPI {
     IPlayerDataAPI getPlayerData();
     ILangAPI getLang();
     IMetricsAPI getMetrics();
+    IServiceRegistry getServiceRegistry();
 }

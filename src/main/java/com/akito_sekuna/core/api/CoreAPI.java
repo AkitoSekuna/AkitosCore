@@ -28,4 +28,9 @@ public class CoreAPI implements ICoreAPI {
     public IMetricsAPI getMetrics() {
         return Main.getMetricsManager();
     }
+
+    @Override
+    public IServiceRegistry getServiceRegistry() {
+        return Main.getServiceRegistry();
+    }
 }

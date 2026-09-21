@@ -2,6 +2,7 @@ package com.akito_sekuna.core;
 
 import com.akito_sekuna.core.api.CoreAPI;
 import com.akito_sekuna.core.api.ICoreAPI;
+import com.akito_sekuna.core.api.IServiceRegistry;
 import com.akito_sekuna.core.listeners.PlayerListener;
 import com.akito_sekuna.core.managers.BankManager;
 import com.akito_sekuna.core.managers.ConfigManager;
@@ -11,6 +12,7 @@ import com.akito_sekuna.core.managers.LangManager;
 import com.akito_sekuna.core.managers.MetricsManager;
 import com.akito_sekuna.core.managers.PlayerDataManager;
 import com.akito_sekuna.core.managers.SessionTracker;
+import com.akito_sekuna.core.managers.ServiceRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -31,6 +33,7 @@ public class Main extends JavaPlugin {
     private static BankManager bankManager;
     private static LangManager langManager;
     private static SessionTracker sessionTracker;
+    private static ServiceRegistry serviceRegistry;
     private static ICoreAPI api;
     private static MetricsManager metricsManager;
     private static final CommandIssueTracker commandIssueTracker = new CommandIssueTracker();
@@ -76,6 +79,7 @@ public class Main extends JavaPlugin {
         bankManager = new BankManager(this);
         langManager = new LangManager(this);
         sessionTracker = new SessionTracker();
+        serviceRegistry = new ServiceRegistry();
         api = new CoreAPI();
         metricsManager = new MetricsManager(this, configManager.isMetricsEnabled());
         metricsManager.registerLineChart("registered_addons", () -> getRegisteredAddons().size());
@@ -140,6 +144,10 @@ public class Main extends JavaPlugin {
 
     public static SessionTracker getSessionTracker() {
         return sessionTracker;
+    }
+
+    public static IServiceRegistry getServiceRegistry() {
+        return serviceRegistry;
     }
 
     public static MetricsManager getMetricsManager() {
